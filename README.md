@@ -35,7 +35,8 @@ So, some of the jobs need to be done "by hand":
   * Open the link to the direct image
   * Right-click and use "Copy Image" (in Firefox)
   * Right-click and use "Past" in the Day One post
-  * Cleanup of the texts you don't like to keep
+
+* Cleanup of the texts you don't like to keep
   
 In my case, I have 980 photos, so it takes me time to do the "by hand" process but you don't need to do it at one time :-)
 
