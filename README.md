@@ -6,8 +6,8 @@ I didn't find a solution for this process so I decided to use my favourite tool,
 First, you need to download toy data on the Flickr website. You can use "Download all your content (Flickr Data)" on this page: 
 https://www.flickrhelp.com/hc/en-us/articles/4404079675156-Downloading-content-from-Flickr 
 
-Create the folder /data/flickr/ with permission 777
-Copy the Flcikr's JSON files in /data/flickr/ in your Node-Red
+Create the folder /data/flickr/ with permission 777.
+Copy the Flickr's JSON files in /data/flickr/ in your Node-Red.
 
 You need to create an account on geonames.org. This will use to get the timezone from the GPS data. This is the slower part of the process. Maybe, a better way is possible to achieve this part.
 Add your username in the field of the "lookup timezone" node.
