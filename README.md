@@ -21,7 +21,16 @@ After you can import the two files on Day One.
 Unfortunately, I wasn't able to import a JSON file on Day One, so I used "Plain Text File" what's limited.
 So, some of the jobs need to be done "by hand":
 
-* Add the GPS coordinates to the post (this will fix the time of the post. Note day saving isn't supported in this version)
+* Add the GPS coordinates to the post
+  * Copy location data present in the post (like "34.120273,-118.183643")
+  * Right-click the bottom bar of the post
+  * Select "location / Edit"
+  * Past it in the search field
+  * Click on the "Search Result"
+  * Click "Ok"
+    * This will fix the time of the post
+    * Note: day saving isn't supported in this version
+    
 * Add the photo to the post
   * Open the link to the direct image
   * Right-click and use "Copy Image" (in Firefox)
