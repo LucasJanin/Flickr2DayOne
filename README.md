@@ -48,3 +48,5 @@ So, some of the jobs need to be done "by hand":
 In my case, I have 980 photos, so it takes me time to do the "by hand" process but you don't need to do it at one time :-)
 
 Feel free to contact me with any questions.
+
+![DayOne](DayOne.png)
