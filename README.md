@@ -1,20 +1,24 @@
 # Flickr2DayOne
 
-After being present for many years on Flickr, I decided to import all my photos with descriptions, GPS, tags and comments on Day One.
+After being present for many years on [Flickr](https://www.flickr.com/photos/lucas3d), I decided to import all my photos with descriptions, GPS, tags and comments on Day One.
 I didn't find a solution for this process so I decided to use my favourite tool, Node Red to code this process.
 
-First, you need to download toy data on the Flickr website. You can use "Download all your content (Flickr Data)" on this page: 
-https://www.flickrhelp.com/hc/en-us/articles/4404079675156-Downloading-content-from-Flickr 
+First, you need to download toy data on the Flickr website. You can use "Download all your content (Flickr Data)" on the [Flickr Help](https://www.flickrhelp.com/hc/en-us/articles/4404079675156-Downloading-content-from-Flickr)
 
-Create the folder /data/flickr/ with permission 777.
-Copy the Flickr's JSON files in /data/flickr/ in your Node-Red.
+Create the folder /data/flickr/ with permission 777 in your Node-Red.
+Copy the Flickr's JSON files in this folder.
 
-You need to create an account on geonames.org. This will use to get the timezone from the GPS data. This is the slower part of the process. Maybe, a better way is possible to achieve this part.
-Add your username in the field of the "lookup timezone" node.
+First I use [geonames.org](http://geonames.org) but it was creating error and Node Red instabilities.
+I move using google timezone API. You need to activate your account (need to be completed).
 
-The data is stored in two files:
-* /data/flickr/flickr.txt : Photos with GPS data (can be directly imported Day One)
-* /data/flickr/flickrNTZ.txt : Photos without GPS data ("???" need to be fixed by hand in the text file before importation on Day One)
+This will use to get the timezone from the GPS data. This is the slower part of the process and this request create eorr after an certain number of requests. I decided to split de process of the JSON files in 10 parts to help. For now, just retry multiple time until all the bastch is processed. You can check the files numer in linux/mac terminal using "ls | wc -l" in the output folder (/data/flickr/output).
+
+It's definitely a temporal solution.
+I'm sure it existe a better way to achieve this part. I open for subjection.
+
+When this part is done, you use de bottom section to merge the files in two files:
+* /data/flickr/merge/flickr_TZ.txt : Photos with GPS data (can be directly imported Day One)
+* /data/flickr/merge/flickr_NTZ.txt : Photos without GPS data ("???" need to be fixed by hand in the text file before importation on Day One)
 
 After you can import the two files on Day One.
   
