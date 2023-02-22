@@ -1,6 +1,6 @@
 # Flickr2DayOne
 
-After being present for many years on [Flickr](https://www.flickr.com/photos/lucas3d), I decided to import all my 980 photos with descriptions, GPS, tags and comments on Day One. I didn't find a solution for this process, so I decided to use my favourite tool, Node Red to code it.
+After being present for many years on [Flickr](https://www.flickr.com/photos/lucas3d), I decided to import all my 980 photos with descriptions, GPS, tags and comments on Day One. I didn't find a solution for this process, so I decided to use my favourite tool, Node-Red.
 
 ![Flickr2DayOne Flow](Flickr2DayOne_flow.png)
 
@@ -43,7 +43,7 @@ After you can import the two files on Day One.
 ## By Hand Fixes
 
 Unfortunately, I wasn't able to import a JSON file on Day One, so I used "Plain Text File" what's limited.
-So, some of the jobs need to be done "by hand":
+So, some part of the jobs need to be done "by hand". You can filter the posts using "flickrImport" to easy find all the poste to fix.
 
 * Add the GPS coordinates to the post
   * Copy location data present in the post (like "34.120273,-118.183643")
@@ -53,7 +53,7 @@ So, some of the jobs need to be done "by hand":
   * Click on the "Search Result"
   * Click "Ok"
     * This will fix the time of the post
-    * Note: day saving isn't supported in this version
+    * Note: I still have some offset in beween the reeal time and Day One time. I add an extra hour, this is look working for part of my photos.
     
 * Add the photo to the post
   * Open the link to the direct image
@@ -64,8 +64,8 @@ So, some of the jobs need to be done "by hand":
  
 ## Result 
  
-In my case, I have 980 photos, so it takes me time to do the "by hand" process but you don't need to do it at one time :-).
-There is the result of the importation with some hand integration
+In my case, I have 980 photos, so it takes me time to do the "by hand" process, but you don't need to do it at one time :-).
+There is the result of the importation with some hand integration.
 
 ![DayOne](DayOne.png)
 
