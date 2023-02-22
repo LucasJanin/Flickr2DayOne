@@ -1,7 +1,6 @@
 # Flickr2DayOne
 
-After being present for many years on [Flickr](https://www.flickr.com/photos/lucas3d), I decided to import all my photos with descriptions, GPS, tags and comments on Day One.
-I didn't find a solution for this process so I decided to use my favourite tool, Node Red to code this process.
+After being present for many years on [Flickr](https://www.flickr.com/photos/lucas3d), I decided to import all my 980 photos with descriptions, GPS, tags and comments on Day One. I didn't find a solution for this process, so I decided to use my favourite tool, Node Red to code this process.
 
 ![Flickr2DayOne Flow](Flickr2DayOne_flow.png)
 
