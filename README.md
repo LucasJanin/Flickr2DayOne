@@ -1,4 +1,10 @@
+## WARNING ## 
+
+I'm working on a new version using Day One CLI, this includes the photo, tag and GPS data. No more edition is needed except repositinng the photo in the post if you want. I will update the code very soon.
+
 # Flickr2DayOne
+
+### Old version using "Plain Text File" importation ###
 
 After being present for many years on [Flickr](https://www.flickr.com/photos/lucas3d), I decided to import all my 980 photos with descriptions, GPS, tags and comments on Day One. I didn't find a solution for this process, so I decided to use my favourite tool, Node-Red.
 
