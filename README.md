@@ -1,6 +1,6 @@
 # Flickr2DayOne
 
-After being present for many years on [Flickr](https://www.flickr.com/photos/lucas3d), I decided to import all my 980 photos with descriptions, GPS, tags and comments on Day One. I didn't find a solution for this process, so I decided to use my favourite tool, Node-Red.
+After being present for many years on [Flickr](https://www.flickr.com/photos/lucas3d), I decided to import all my 980 photos with descriptions, GPS, tags and comments on Day One. I didn't find a solution for this process, so I decided to use my favourite tool, Node-Red. This import is using the archive exported for Flickr. It isn't working live when you add a new photo to Flickr.
  
 There is the result of the importation with a small hand change (moving the picture to the top of the entry).
 
