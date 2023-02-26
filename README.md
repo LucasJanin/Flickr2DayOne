@@ -40,10 +40,13 @@ The flow will ouput two type of file of each photo:
 
 You can check the number of files generated in the terminal using "ls | wc -l" in the output folder: 
 ```
-ls | wc -l/Volumes/docker/nodered/flickr/output/sh/
+ls | wc -l /Volumes/docker/nodered/flickr/output/sh/
 ```
-When this part is done, you use de bottom section to merge the sh files:
-You can 
+When this part is done, you use de bottom section to merge the sh files.
+```
+/Volumes/docker/nodered/flickr/merge/flickr.sh
+```
+You can execute this scripte to create on the the entries.
 
 ## The flow
 
