@@ -45,8 +45,8 @@ The free version has a limit of requests (one every second). This "limitation" c
 ## Output
 
 The flow will create two types of files for each photo:
-* sh: CLI command to generate the entry, this example
-* md: Text of the entry, this example
+* sh: CLI command to generate the entry, there is an [example](photo_4481220450_example.sh) of this file 
+* md: Text of the entry, there is an [example](photo_4481220450_example.md) of this file 
 
 You can check the number of files generated in the terminal using "ls | wc -l" in the output folder: 
 ```
