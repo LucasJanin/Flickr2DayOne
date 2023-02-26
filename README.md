@@ -1,6 +1,10 @@
 # Flickr2DayOne
 
 After being present for many years on [Flickr](https://www.flickr.com/photos/lucas3d), I decided to import all my 980 photos with descriptions, GPS, tags and comments on Day One. I didn't find a solution for this process, so I decided to use my favourite tool, Node-Red.
+ 
+There is the result of the importation with a small hand change (moving th picture in the entry).
+
+![DayOne](DayOne.png)
 
 ## Prerequirements
 
@@ -53,11 +57,5 @@ You can execute this scripte to create on the the entries.
 ![Flickr2DayOne Flow](Flickr2DayOne_flow.png)
 
 The code: ![Flickr2DayOne Json](Flickr2DayOne.json)
-
-## Result 
- 
-There is the result of the importation with a small hand change (moving th picture in the entry).
-
-![DayOne](DayOne.png)
 
 Feel free to contact me with any questions.
