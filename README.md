@@ -1,6 +1,6 @@
 ## WARNING ## 
 
-I'm working on a new version using Day One CLI, this includes the photo, tag and GPS data. No more edition is needed except repositinng the photo in the post if you want. I will update the code very soon.
+I'm working on a new version using Day One CLI, this includes the photo, tag and GPS data. No more edition is needed except repositionning the photo in the post if you want. I will update the code very soon.
 
 # Flickr2DayOne
 
