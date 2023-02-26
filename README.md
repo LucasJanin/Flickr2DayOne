@@ -4,7 +4,7 @@ After being present for many years on [Flickr](https://www.flickr.com/photos/luc
 
 ## Prerequirements
 
-Of cause you need [Node-Red](https://nodered.org). Be carfull, this progra is adictif ! :-)
+Of cause you need [Node-Red](https://nodered.org). Be carfull, this sofwarre is very adictif ! :-)
 If I was a better programing person, I will code it on python :-)
 
 You need to isntall the [Day One CLI](https://dayoneapp.com/guides/tips-and-tutorials/command-line-interface-cli/) on your Mac:
