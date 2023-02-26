@@ -50,7 +50,7 @@ When this part is done, you use de bottom section to merge the sh files.
 ```
 /Volumes/docker/nodered/flickr/merge/flickr.sh
 ```
-You can execute this scripte to create on the the entries.
+You can execute this script to create the entries in Day One.
 
 ## The flow
 
