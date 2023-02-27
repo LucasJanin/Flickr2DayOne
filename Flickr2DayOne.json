@@ -12,40 +12,23 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1930,
-        "y": 2260,
-        "wires": []
-    },
-    {
-        "id": "a2ba874049a969bc",
-        "type": "debug",
-        "z": "6cf7250c223824e5",
-        "name": "debug no timezone",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 2470,
-        "y": 2380,
+        "x": 1910,
+        "y": 3440,
         "wires": []
     },
     {
         "id": "4d0b4499fc974c54",
         "type": "function",
         "z": "6cf7250c223824e5",
-        "name": "date",
-        "func": "let dt = msg.payload.date_taken;\n\nconst dtArray = dt.split(\" \");\nlet dtDate = dtArray[0];\nlet dtTime = dtArray[1];\n \nconst dtDateArray = dtDate.split(\"-\");\n\n// month as a number 0-11\nvar monthNumber = parseFloat(dtDateArray[1]);\n\nvar months = { 1: \"January\", 2: \"February\", 3: \"March\", 4: \"April\", 5: \"May\", 6: \"June\", 7: \"July\", 8: \"August\", 9: \"September\", 10: \"October\", 11: \"November\", 12: \"December\" };\n//var month = monthNumber.getMonth();\nvar monthName = months[monthNumber];\n\n//day as a number 1 -31\nvar day = dtDateArray[2]; \n\n//year as a four digit number (yyyy)\nvar year = dtDateArray[0]; \n\nvar date = '\\tDate:\\t' + monthName + ' ' + day + ', ' + year + ' at ' + dtTime;\n\n// Output\nmsg.payload.output = {};\nmsg.payload.output.date = date;\nmsg.payload.output.time = dtTime;\nreturn msg;",
+        "name": "time",
+        "func": "let dt = msg.payload.date_taken;\nconst dtArray = dt.split(\" \");\nlet dtTime = dtArray[1];\n\n// Output\nmsg.payload.output = {};\nmsg.payload.output.time = dtTime;\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
         "x": 750,
-        "y": 2160,
+        "y": 3280,
         "wires": [
             [
                 "1abc312619d24f2d"
@@ -57,17 +40,18 @@
         "type": "function",
         "z": "6cf7250c223824e5",
         "name": "output",
-        "func": "var title = msg.payload.name;\nvar description;\nif (msg.payload.description != null)\n{\n    var descArray = msg.payload.description.split(\"---\");\n    description = descArray[0] + '\\n';\n    if (descArray[2] != null)\n        description += descArray[2] + '\\n';\n    \n    // personal clenup of my description\n    description = description.replace(/[\\r\\n]{3,}/gm, '');\n    description = description.replace(/[\\&\\;]/g, '');\n    description = description.replace(/Press quotLquot to best view \\(specially with a Retina Display\\)/g, '');\n    description = description.replace(/À regarder en mode plein écran avec la touche quotLquot \\(spécialement avec un écran Retina\\)/g, '');\n    \n    // add views, faves and comment number\n    description += 'Views : ' + msg.payload.count_views;\n    if (msg.payload.count_faves != 0)\n        description += ' | Faves : ' + msg.payload.count_faves;\n    if (msg.payload.count_comments != 0)\n        description += ' | Comments : ' + msg.payload.count_comments ;\n    description += '\\n';\n}\n\nvar result = '';\n\n// add timezone to the date (needed for Day One import)\nif (msg.payload.output.rawOffset != null)\n{\n    var gmt = (msg.payload.output.rawOffset + msg.payload.output.dstOffset) / 3600;\n    if (gmt < 0)\n        result += msg.payload.output.date + ' GMT' + gmt + '\\n';\n    else if (gmt == 0)\n        result += msg.payload.output.date + ' GMT\\n';\n    else if (gmt > 0)\n       result += msg.payload.output.date + ' GMT+' + gmt + '\\n'; \n    msg.timezone = 1;\n}\nelse\n{\n    // if not gps data is associated, I add \"???\" carracters\n    // this need to be fix by hand in the texte file before import in day one\n    result += msg.payload.output.date + ' ???\\n';\n    msg.timezone = 0;\n}    \n\n// prepation of the texte file   \nresult += '\\n# ' + title + '\\n\\n';\nresult += description + '\\n';\nif (msg.payload.output.gps != null)\n    result += msg.payload.output.gps;\nresult += msg.payload.output.time + '\\n\\n';\nresult += msg.payload.original + '\\n\\n';\nif (msg.payload.output.comments != null)\n    result += msg.payload.output.comments + '\\n';\nresult += msg.payload.photopage + '\\n';\nresult += '\\n#flickrImport';\nif (msg.payload.output.tags != null)\n    result += msg.payload.output.tags;\nresult += '\\n\\n';\n\n// Output\nmsg.payload = result;\nreturn msg;",
+        "func": "// dayone2 -j Journal -p ~/Downloads/7803240212_d293878ca1_o.jpg --coordinate 42.366488 1.913255 -z Europe/Madrid --date='2012-08-12 17:04:10' -t flickr spain road sky -- new < ~/Downloads/text.md\n\n// input\nvar title = msg.payload.name;\nvar gps = '';\nvar flickrPhotoPath = '~/Documents/DayOne/Flickr/Photos/';\nvar flickrMdPath = '/Volumes/docker/nodered/flickr/output/md/';\nvar photo = msg.payload.name.toLowerCase();\nphoto = photo.replace(/\\ /g, '-');\nphoto = photo.replace(/[^a-zA-Z0-9\\-]/gi, '');\n\nphoto = flickrPhotoPath + photo + '_' + msg.payload.id + '_o.jpg';\nif (msg.payload.output.gps != null)\n    gps = msg.payload.output.gps;\n\n// sh\nvar sh = '';\nsh += 'dayone2 -j Journal -p ' + photo + ' ';\n\nif (msg.payload.output.gps != null)\n{\n    sh += '--coordinate ' + msg.payload.output.gps + ' ';\n    sh += '-z ' + msg.payload.output.timezone + ' ';\n}\n\nsh += '--isoDate=\\'' + msg.payload.date_taken.replace(/\\ /g, 'T') + 'Z\\' ';\nif (msg.payload.output.tags != null)\n    sh += '-t flickr TMP' + msg.payload.output.tags;\n\n// description\nsh += ' -- new < ' + flickrMdPath + 'photo_' + msg.payload.id + '.md'; \n\n// out\nmsg.payload.outSh = sh;\n\n// md\nvar md = '';\n\n// title\n// capitalize first letter of a word \nconst arr = title.split(\" \");\nfor (var j = 1; j < arr.length; j++)\n    arr[j] = arr[j].charAt(0).toUpperCase() + arr[j].slice(1);\nmd += title + '\\n';\n\n// add time for debuging  \nmd += msg.payload.output.time + '\\n';\n\n// add file in for debug\n//md += 'photo_' + msg.payload.id + '\\n';\n\n// description\nif (msg.payload.description != '')\n    md += '\\n' + msg.payload.description + '\\n';\nmd += '\\n';\n\n// add views, faves and comment number\nmd += 'Views : ' + msg.payload.count_views;\nif (msg.payload.count_faves != 0)\n    md += ' | Faves : ' + msg.payload.count_faves;\nif (msg.payload.count_comments != 0)\n    md += ' | Comments : ' + msg.payload.count_comments;\nmd += '\\n\\n';\n\n// add comments\nif (msg.payload.output.comments != null)\n    md += msg.payload.output.comments + '\\n';\n\n// addd flickr link\nmd += msg.payload.photopage;\n\n// out\nmsg.payload.outMd = md;\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1910,
-        "y": 2340,
+        "x": 1890,
+        "y": 3520,
         "wires": [
             [
-                "ca54b552e3787181"
+                "9c923fce4156763d",
+                "5a470e6eafb3221b"
             ]
         ]
     },
@@ -76,17 +60,17 @@
         "type": "function",
         "z": "6cf7250c223824e5",
         "name": "tags",
-        "func": "var tags = '';\nif (msg.payload.tags.length > 0) \n{\n    const counter = msg.payload.tags.length;\n    let i = 0;\n     while (i < counter)\n     {\n        // get tag\n        var tag = msg.payload.tags[i].tag;\n\n        // capitalize first letter of a word except the first one\n        tag = tag.replace(/[\\-\\/]/gm, '');\n        const arr = tag.split(\" \");\n        for (var j = 1; j < arr.length; j++)\n            arr[j] = arr[j].charAt(0).toUpperCase() + arr[j].slice(1);\n        var tmpTag = arr.join(\"\");\n\n        // Personal replace carracters \n        tmpTag = tmpTag.replace(/Mm/g, 'mm');\n        tmpTag = tmpTag.replace(/Sec/g, 'sec');\n        tmpTag = tmpTag.replace(/\\.0/g, '');\n        tmpTag = tmpTag.replace(/\\¹/g, '1');\n        tmpTag = tmpTag.replace(/\\₀/g, '0');\n        tmpTag = tmpTag.replace(/\\₁/g, '1');\n        tmpTag = tmpTag.replace(/\\₂/g, '2');\n        tmpTag = tmpTag.replace(/\\₃/g, '3');\n        tmpTag = tmpTag.replace(/\\₄/g, '4');\n        tmpTag = tmpTag.replace(/\\₅/g, '5');\n        tmpTag = tmpTag.replace(/\\₆/g, '6');\n        tmpTag = tmpTag.replace(/\\₈/g, '8');\n        tmpTag = tmpTag.replace(/\\⅕/g, '1/5');\n        tmpTag = tmpTag.replace(/\\⅛/g, '1/8');\n        tmpTag = tmpTag.replace(/\\½/g, '1/2');\n        tmpTag = tmpTag.replace(/\\⅓/g, '1/3');\n        tmpTag = tmpTag.replace(/\\¼/g, '1/4');\n        \n        // Personal filter\n        if (tmpTag != 'lucasJanin') \n            tags += ' #' + tmpTag;\n        i++;\n    }\n}\nmsg.payload.output.tags = tags;\nreturn msg;\n\n",
+        "func": "var tags = '';\nif (msg.payload.tags.length > 0) \n{\n    const counter = msg.payload.tags.length;\n    let i = 0;\n     while (i < counter)\n     {\n        // get tag\n        var tag = msg.payload.tags[i].tag;\n\n        // capitalize first letter of a word except the first one\n        //tag = tag.replace(/[\\-\\/]/gm, '');\n        const arr = tag.split(\" \");\n        for (var j = 1; j < arr.length; j++)\n            arr[j] = arr[j].charAt(0).toUpperCase() + arr[j].slice(1);\n        var tmpTag = arr.join(\"\");\n\n        // Personal replace carracters \n        tmpTag = tmpTag.replace(/Mm/g, 'mm');\n        tmpTag = tmpTag.replace(/Sec/g, 'sec');\n        tmpTag = tmpTag.replace(/\\.0/g, '');\n        tmpTag = tmpTag.replace(/\\¹/g, '1');\n        tmpTag = tmpTag.replace(/\\₀/g, '0');\n        tmpTag = tmpTag.replace(/\\₁/g, '1');\n        tmpTag = tmpTag.replace(/\\₂/g, '2');\n        tmpTag = tmpTag.replace(/\\₃/g, '3');\n        tmpTag = tmpTag.replace(/\\₄/g, '4');\n        tmpTag = tmpTag.replace(/\\₅/g, '5');\n        tmpTag = tmpTag.replace(/\\₆/g, '6');\n        tmpTag = tmpTag.replace(/\\₈/g, '8');\n        tmpTag = tmpTag.replace(/\\⅕/g, '1/5');\n        tmpTag = tmpTag.replace(/\\⅛/g, '1/8');\n        tmpTag = tmpTag.replace(/\\½/g, '1/2');\n        tmpTag = tmpTag.replace(/\\⅓/g, '1/3');\n        tmpTag = tmpTag.replace(/\\¼/g, '1/4');\n        \n        // Personal filter\n        if (tmpTag != 'lucasJanin') \n            //tags += ' #' + tmpTag;\n            tags += ' ' + tmpTag;\n        i++;\n    }\n}\nmsg.payload.output.tags = tags;\nreturn msg;\n\n",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
         "x": 750,
-        "y": 2280,
+        "y": 3400,
         "wires": [
             [
-                "999c39cd51f8e68e"
+                "1e3cb120e9bbd122"
             ]
         ]
     },
@@ -95,14 +79,14 @@
         "type": "function",
         "z": "6cf7250c223824e5",
         "name": "gps",
-        "func": "// gps fixe data form flickt missing the dot carracter\nvar rawLatitude = msg.payload.geo[0].latitude;\nvar rawLongitude = msg.payload.geo[0].longitude;\nvar intLatitude = rawLatitude.substring(0, rawLatitude.length-6);\nvar intLongitude = rawLongitude.substring(0, rawLongitude.length - 6);\nvar floatLatitude = rawLatitude.substring(rawLatitude.length - 6, rawLatitude.length);\nvar floatLongitude = rawLongitude.substring(rawLongitude.length - 6, rawLongitude.length);\n\n// Output\nmsg.payload.output.gps = intLatitude + '.' + floatLatitude + ',' + intLongitude + '.' + floatLongitude + '\\n';\nmsg.payload.latitude = intLatitude + '.' + floatLatitude;\nmsg.payload.longitude = intLongitude + '.' + floatLongitude;\nreturn msg;",
+        "func": "// gps fixe data form flickt missing the dot carracter\nvar rawLatitude = msg.payload.geo[0].latitude;\nvar rawLongitude = msg.payload.geo[0].longitude;\nvar intLatitude = rawLatitude.substring(0, rawLatitude.length-6);\nvar intLongitude = rawLongitude.substring(0, rawLongitude.length - 6);\nvar floatLatitude = rawLatitude.substring(rawLatitude.length - 6, rawLatitude.length);\nvar floatLongitude = rawLongitude.substring(rawLongitude.length - 6, rawLongitude.length);\n\n// get timestamp for date_taken\nconst dt = new Date(msg.payload.date_taken).getTime();\nmsg.payload.timestamp = dt / 1000;\n\n// Output\nmsg.payload.output.gps = intLatitude + '.' + floatLatitude + ' ' + intLongitude + '.' + floatLongitude;\nmsg.payload.latitude = intLatitude + '.' + floatLatitude;\nmsg.payload.longitude = intLongitude + '.' + floatLongitude;\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
         "x": 950,
-        "y": 2300,
+        "y": 3480,
         "wires": [
             [
                 "b99169095cb11912"
@@ -138,9 +122,9 @@
             },
             {
                 "t": "set",
-                "p": "payload.date_taken",
+                "p": "payload.timestamp",
                 "pt": "msg",
-                "to": "back.date_taken",
+                "to": "back.timestamp",
                 "tot": "msg"
             }
         ],
@@ -150,7 +134,7 @@
         "to": "",
         "reg": false,
         "x": 1090,
-        "y": 2300,
+        "y": 3480,
         "wires": [
             [
                 "83600ca7ae8a9918"
@@ -162,36 +146,17 @@
         "type": "function",
         "z": "6cf7250c223824e5",
         "name": "comments",
-        "func": "// comments\nif (msg.payload.comments.length > 0) \n{\n    var comments = '';\n    let i = 0;\n    while (i < msg.payload.comments.length)\n    {\n        var comment = '';\n\n        // add a label for my comment\n        if (msg.payload.comments[i].user == '21325004@N04')\n            comment = 'Lucas3d: '; \n        comment += msg.payload.comments[i].comment;\n        \n        // personal rules\n        comment = comment.replace(/\\[(.*?)\\]\\ /ig, '');\n        comment = comment.replace(/\\<(.*?)\\>/ig, ' ');\n        comment = comment.replace(/\\n/ig, '');\n        \n        // capitalize first letter of the first word\n        var c1 = comment.substring(0, 1).toUpperCase();\n        var c2 = comment.substring(1, comment.length);\n        comments += ' * ' + c1 + c2 + '\\n';\n        i++;\n    }\n    msg.payload.output.comments = comments;\n}\nreturn msg;",
+        "func": "// comments\nif (msg.payload.comments.length > 0) \n{\n    var comments = '';\n    let i = 0;\n    while (i < msg.payload.comments.length)\n    {\n        var comment = '';\n\n        // add a label for my comment\n        if (msg.payload.comments[i].user == '21325004@N04')\n            comment = 'Lucas3d: '; \n        comment += msg.payload.comments[i].comment;\n        \n        // personal rules\n        comment = comment.replace(/\\[(.*?)\\]\\ /ig, '');\n        comment = comment.replace(/\\<(.*?)\\>/ig, ' ');\n        comment = comment.replace(/\\n/g, ' ');\n        //comment = comment.replace(/\\s/g, ' ');\n        comment = comment.replace(/\\-\\-.*?\\( \\? \\)/g, '');\n        comment = comment.replace(/\\s\\s+/g, ' ');\n        \n        // capitalize first letter of the first word\n        var c1 = comment.substring(0, 1).toUpperCase();\n        var c2 = comment.substring(1, comment.length);\n        comments += ' * ' + c1 + c2 + '\\n';\n        i++;\n    }\n    msg.payload.output.comments = comments;\n}\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
         "x": 730,
-        "y": 2220,
+        "y": 3340,
         "wires": [
             [
                 "35d8bd61c8804d3d"
-            ]
-        ]
-    },
-    {
-        "id": "86675cc75a128a5a",
-        "type": "file",
-        "z": "6cf7250c223824e5",
-        "name": "file.out",
-        "filename": "file.out",
-        "filenameType": "msg",
-        "appendNewline": true,
-        "createDir": true,
-        "overwriteFile": "true",
-        "encoding": "none",
-        "x": 2250,
-        "y": 2300,
-        "wires": [
-            [
-                "b0a1dd8fca754ff8"
             ]
         ]
     },
@@ -208,62 +173,10 @@
         "encoding": "utf8",
         "allProps": false,
         "x": 740,
-        "y": 2040,
+        "y": 3160,
         "wires": [
             [
                 "69ef756fa154facc"
-            ]
-        ]
-    },
-    {
-        "id": "31342f1662e5cc81",
-        "type": "fs-file-lister",
-        "z": "6cf7250c223824e5",
-        "name": "3 files",
-        "start": "/data/flickr/",
-        "pattern": "photo_*099.json",
-        "folders": "*",
-        "hidden": true,
-        "lstype": "files",
-        "path": true,
-        "single": true,
-        "depth": 0,
-        "stat": false,
-        "showWarnings": true,
-        "x": 330,
-        "y": 2680,
-        "wires": [
-            [
-                "2e015f9ee6edefaf"
-            ]
-        ]
-    },
-    {
-        "id": "bb80d9c0bc69a5fe",
-        "type": "inject",
-        "z": "6cf7250c223824e5",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 160,
-        "y": 2680,
-        "wires": [
-            [
-                "31342f1662e5cc81"
             ]
         ]
     },
@@ -276,7 +189,7 @@
         "action": "",
         "pretty": false,
         "x": 750,
-        "y": 2100,
+        "y": 3220,
         "wires": [
             [
                 "4d0b4499fc974c54"
@@ -294,11 +207,11 @@
         "arraySpltType": "len",
         "stream": false,
         "addname": "",
-        "x": 570,
-        "y": 1800,
+        "x": 550,
+        "y": 2920,
         "wires": [
             [
-                "5f31ea54ef13a4ac"
+                "ef1290206951975f"
             ]
         ]
     },
@@ -321,7 +234,7 @@
         "repair": false,
         "outputs": 2,
         "x": 750,
-        "y": 2340,
+        "y": 3514,
         "wires": [
             [
                 "63c531b8fa5888e1"
@@ -332,238 +245,13 @@
         ]
     },
     {
-        "id": "0ea311dd9a0f4815",
-        "type": "fs-file-lister",
-        "z": "6cf7250c223824e5",
-        "name": "17 files",
-        "start": "/data/flickr/",
-        "pattern": "photo_*39.json",
-        "folders": "*",
-        "hidden": true,
-        "lstype": "files",
-        "path": true,
-        "single": true,
-        "depth": 0,
-        "stat": false,
-        "showWarnings": true,
-        "x": 340,
-        "y": 2740,
-        "wires": [
-            [
-                "2e015f9ee6edefaf"
-            ]
-        ]
-    },
-    {
-        "id": "f7dc52aa57fe0265",
-        "type": "inject",
-        "z": "6cf7250c223824e5",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 160,
-        "y": 2740,
-        "wires": [
-            [
-                "0ea311dd9a0f4815"
-            ]
-        ]
-    },
-    {
-        "id": "51ace07cbe0f37a5",
-        "type": "fs-file-lister",
-        "z": "6cf7250c223824e5",
-        "name": "1 file",
-        "start": "/data/flickr/",
-        "pattern": "photo_7803240212.json",
-        "folders": "*",
-        "hidden": true,
-        "lstype": "files",
-        "path": true,
-        "single": true,
-        "depth": 0,
-        "stat": false,
-        "showWarnings": true,
-        "x": 330,
-        "y": 2620,
-        "wires": [
-            [
-                "2e015f9ee6edefaf"
-            ]
-        ]
-    },
-    {
-        "id": "040c905027b760ad",
-        "type": "inject",
-        "z": "6cf7250c223824e5",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 160,
-        "y": 2620,
-        "wires": [
-            [
-                "51ace07cbe0f37a5"
-            ]
-        ]
-    },
-    {
-        "id": "ca54b552e3787181",
-        "type": "switch",
-        "z": "6cf7250c223824e5",
-        "name": "",
-        "property": "timezone",
-        "propertyType": "msg",
-        "rules": [
-            {
-                "t": "eq",
-                "v": "1",
-                "vt": "str"
-            },
-            {
-                "t": "eq",
-                "v": "0",
-                "vt": "str"
-            }
-        ],
-        "checkall": "true",
-        "repair": false,
-        "outputs": 2,
-        "x": 2070,
-        "y": 2340,
-        "wires": [
-            [
-                "86675cc75a128a5a"
-            ],
-            [
-                "080ce5e6cb0bfdbb"
-            ]
-        ]
-    },
-    {
-        "id": "080ce5e6cb0bfdbb",
-        "type": "file",
-        "z": "6cf7250c223824e5",
-        "name": "file.NTZOut",
-        "filename": "file.NTZOut",
-        "filenameType": "msg",
-        "appendNewline": true,
-        "createDir": true,
-        "overwriteFile": "true",
-        "encoding": "none",
-        "x": 2270,
-        "y": 2380,
-        "wires": [
-            [
-                "a2ba874049a969bc"
-            ]
-        ]
-    },
-    {
-        "id": "49a80f2729dcfd3d",
-        "type": "fs-file-lister",
-        "z": "6cf7250c223824e5",
-        "name": "Files ending by 0",
-        "start": "/data/flickr/",
-        "pattern": "photo_*0.json",
-        "folders": "*",
-        "hidden": true,
-        "lstype": "files",
-        "path": true,
-        "single": true,
-        "depth": 0,
-        "stat": false,
-        "showWarnings": true,
-        "x": 370,
-        "y": 1940,
-        "wires": [
-            [
-                "63307299fd92c10a"
-            ]
-        ]
-    },
-    {
-        "id": "0e25dd5331b6b8e1",
-        "type": "inject",
-        "z": "6cf7250c223824e5",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 160,
-        "y": 1940,
-        "wires": [
-            [
-                "49a80f2729dcfd3d"
-            ]
-        ]
-    },
-    {
-        "id": "b0a1dd8fca754ff8",
-        "type": "debug",
-        "z": "6cf7250c223824e5",
-        "name": "debug timezone",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 2460,
-        "y": 2300,
-        "wires": []
-    },
-    {
         "id": "213a01a189ab8cb1",
         "type": "comment",
         "z": "6cf7250c223824e5",
         "name": "Flickr: Photos",
         "info": "",
         "x": 150,
-        "y": 1740,
+        "y": 2860,
         "wires": []
     },
     {
@@ -582,7 +270,7 @@
         "stat": false,
         "showWarnings": true,
         "x": 340,
-        "y": 1800,
+        "y": 2920,
         "wires": [
             [
                 "f57808cf3c2ba3e2"
@@ -611,92 +299,10 @@
         "payload": "",
         "payloadType": "date",
         "x": 160,
-        "y": 1800,
+        "y": 2920,
         "wires": [
             [
                 "a77efada3e28549a"
-            ]
-        ]
-    },
-    {
-        "id": "c6b90bed9637113b",
-        "type": "comment",
-        "z": "6cf7250c223824e5",
-        "name": "Save data with timezone",
-        "info": "",
-        "x": 2310,
-        "y": 2240,
-        "wires": []
-    },
-    {
-        "id": "c2f86454ac9bda8b",
-        "type": "comment",
-        "z": "6cf7250c223824e5",
-        "name": "Save data without timezone",
-        "info": "",
-        "x": 2320,
-        "y": 2440,
-        "wires": []
-    },
-    {
-        "id": "dcd4762456afabbb",
-        "type": "comment",
-        "z": "6cf7250c223824e5",
-        "name": "Split the process in 10",
-        "info": "",
-        "x": 180,
-        "y": 1880,
-        "wires": []
-    },
-    {
-        "id": "176efadfc34982e9",
-        "type": "fs-file-lister",
-        "z": "6cf7250c223824e5",
-        "name": "Files ending by 1",
-        "start": "/data/flickr/",
-        "pattern": "photo_*1.json",
-        "folders": "*",
-        "hidden": true,
-        "lstype": "files",
-        "path": true,
-        "single": true,
-        "depth": 0,
-        "stat": false,
-        "showWarnings": true,
-        "x": 370,
-        "y": 2000,
-        "wires": [
-            [
-                "63307299fd92c10a"
-            ]
-        ]
-    },
-    {
-        "id": "e5d9f72cd0bf7c51",
-        "type": "inject",
-        "z": "6cf7250c223824e5",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 160,
-        "y": 2000,
-        "wires": [
-            [
-                "176efadfc34982e9"
             ]
         ]
     },
@@ -705,14 +311,14 @@
         "type": "function",
         "z": "6cf7250c223824e5",
         "name": "prep request",
-        "func": "// google api key\nvar apikey = 'YOUR_GOOGLE_KEY_API';\n\n// calculate timestamp\nvar date = msg.payload.date_taken;\nvar timestampLong = new Date(date).getTime();\ntimestampLong = timestampLong.toString();\nvar timestamp = timestampLong.substring(0, timestampLong.length - 2);\nmsg.payload.timestamp = timestamp;\n\n// build google url\nmsg.url = \"https://maps.googleapis.com/maps/api/timezone/json\"\n    + '?location='\n    + msg.payload.latitude\n    + '%2C'\n    + msg.payload.longitude\n    + '&timestamp='\n    + timestamp\n    + '&key='\n    + apikey;\n\nreturn msg;",
+        "func": "// timezonedb api key\nvar apikey = 'YOUR_TIMEZONEDB_KEY_API';\n\n// calculate timestamp\n//var date = msg.payload.date_taken;\n//var timestampLong = new Date(date).getTime();\n//timestampLong = timestampLong.toString();\n//var timestamp = timestampLong.substring(0, timestampLong.length - 2);\n//msg.payload.timestamp = timestamp;\n\n// build timezonedb url\nmsg.url = \"http://api.timezonedb.com/v2.1/get-time-zone?key=\"\n    + apikey\n    + '&format=json&by=position&lat='\n    + msg.payload.latitude\n    + '&lng='\n    + msg.payload.longitude\n    + '&time='\n    + msg.payload.timestamp\n    + '&fields=gmtOffset,dst,zoneName'\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
         "x": 1250,
-        "y": 2300,
+        "y": 3480,
         "wires": [
             [
                 "1ae97f4c820b6caa"
@@ -735,8 +341,8 @@
         "authType": "",
         "senderr": false,
         "headers": [],
-        "x": 1430,
-        "y": 2300,
+        "x": 1410,
+        "y": 3480,
         "wires": [
             [
                 "e60e87c392e149d2",
@@ -754,7 +360,7 @@
                 "t": "move",
                 "p": "payload",
                 "pt": "msg",
-                "to": "lookup",
+                "to": "timezonedb",
                 "tot": "msg"
             },
             {
@@ -766,16 +372,23 @@
             },
             {
                 "t": "set",
-                "p": "payload.output.rawOffset",
+                "p": "payload.output.gmtOffset",
                 "pt": "msg",
-                "to": "lookup.rawOffset",
+                "to": "timezonedb.gmtOffset",
                 "tot": "msg"
             },
             {
                 "t": "set",
                 "p": "payload.output.dstOffset",
                 "pt": "msg",
-                "to": "lookup.dstOffset",
+                "to": "timezonedb.dstOffset",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "payload.output.timezone",
+                "pt": "msg",
+                "to": "timezonedb.zoneName",
                 "tot": "msg"
             },
             {
@@ -790,9 +403,9 @@
             },
             {
                 "t": "move",
-                "p": "lookup",
+                "p": "timezonedb",
                 "pt": "msg",
-                "to": "payload.lookup",
+                "to": "payload.timezonedb",
                 "tot": "msg"
             }
         ],
@@ -801,8 +414,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 1710,
-        "y": 2300,
+        "x": 1690,
+        "y": 3480,
         "wires": [
             [
                 "03c7905ac0a94256",
@@ -815,7 +428,7 @@
         "type": "debug",
         "z": "6cf7250c223824e5",
         "name": "Get TZ",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -823,8 +436,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1570,
-        "y": 2340,
+        "x": 1550,
+        "y": 3520,
         "wires": []
     },
     {
@@ -849,8 +462,8 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 1570,
-        "y": 2260,
+        "x": 1550,
+        "y": 3440,
         "wires": [
             [
                 "9d07f39386722b39"
@@ -865,7 +478,7 @@
         "type": "debug",
         "z": "6cf7250c223824e5",
         "name": "Error",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -873,8 +486,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1710,
-        "y": 2220,
+        "x": 1690,
+        "y": 3400,
         "wires": []
     },
     {
@@ -897,7 +510,7 @@
         "to": "",
         "reg": false,
         "x": 730,
-        "y": 1800,
+        "y": 2980,
         "wires": [
             [
                 "1b5536cf9fe1b211"
@@ -909,14 +522,14 @@
         "type": "function",
         "z": "6cf7250c223824e5",
         "name": "files out",
-        "func": "var fileIn = msg.file.in;\nconst fileInArray = fileIn.split(\"/\");\n\nvar fileOut = '';\nvar fileNTZOut = '';\nfileOut = fileIn.replace('.json', '.txt');\nfileOut = fileOut.replace('/photo_', '/output/photo_TZ_');\nfileNTZOut = fileOut.replace('/output/photo_TZ_', '/output/photo_NTZ_');\n\n// Output\nmsg.file.out = fileOut;\nmsg.file.NTZOut = fileNTZOut;\nreturn msg;",
+        "func": "var fileIn = msg.file.in;\nconst fileInArray = fileIn.split(\"/\");\n\n// day one cli and md export\nvar fileSh = '';\nvar fileMd = '';\nfileSh = fileIn.replace('.json', '.sh');\nfileSh = fileSh.replace('/photo_', '/output/sh/photo_');\nfileMd = fileIn.replace('.json', '.md');\nfileMd = fileMd.replace('/photo_', '/output/md/photo_');\n\n// Output\n//msg.file.out = fileOut;\n//msg.file.NTZOut = fileNTZOut;\nmsg.file.sh = fileSh;\nmsg.file.md = fileMd;\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
         "x": 740,
-        "y": 1860,
+        "y": 3040,
         "wires": [
             [
                 "26d11762fed4f154"
@@ -927,64 +540,22 @@
         "id": "26d11762fed4f154",
         "type": "fs-ops-access",
         "z": "6cf7250c223824e5",
-        "name": "fileOut ?",
+        "name": "fileSh?",
         "path": "",
         "pathType": "str",
-        "filename": "file.out",
+        "filename": "msg.file.sh",
         "filenameType": "msg",
         "read": true,
         "write": false,
         "throwerror": false,
-        "x": 740,
-        "y": 1920,
+        "x": 750,
+        "y": 3100,
         "wires": [
-            [
-                "cdc47f602e628e37"
-            ],
-            [
-                "52d8d86722f0b905"
-            ]
-        ]
-    },
-    {
-        "id": "52d8d86722f0b905",
-        "type": "fs-ops-access",
-        "z": "6cf7250c223824e5",
-        "name": "fileNTZOut ?",
-        "path": "",
-        "pathType": "str",
-        "filename": "file.NTZOut",
-        "filenameType": "msg",
-        "read": true,
-        "write": false,
-        "throwerror": false,
-        "x": 730,
-        "y": 1980,
-        "wires": [
-            [
-                "cdc47f602e628e37"
-            ],
+            [],
             [
                 "b0c8739509c30140"
             ]
         ]
-    },
-    {
-        "id": "cdc47f602e628e37",
-        "type": "debug",
-        "z": "6cf7250c223824e5",
-        "name": "File Exist !",
-        "active": false,
-        "tosidebar": true,
-        "console": true,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1030,
-        "y": 1940,
-        "wires": []
     },
     {
         "id": "fbfb146f033b9f3d",
@@ -1008,7 +579,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 160,
-        "y": 2960,
+        "y": 3700,
         "wires": [
             [
                 "4a55016d04d79c7d"
@@ -1020,8 +591,8 @@
         "type": "fs-file-lister",
         "z": "6cf7250c223824e5",
         "name": "All TZ files",
-        "start": "/data/flickr/output/",
-        "pattern": "photo_TZ_*.txt",
+        "start": "/data/flickr/output/sh/",
+        "pattern": "photo_*.sh",
         "folders": "*",
         "hidden": true,
         "lstype": "files",
@@ -1031,488 +602,10 @@
         "stat": false,
         "showWarnings": true,
         "x": 630,
-        "y": 2960,
+        "y": 3700,
         "wires": [
             [
                 "c05621c1fe08f761"
-            ]
-        ]
-    },
-    {
-        "id": "f484b1c499aba1b4",
-        "type": "fs-file-lister",
-        "z": "6cf7250c223824e5",
-        "name": "Files ending by 2",
-        "start": "/data/flickr/",
-        "pattern": "photo_*2.json",
-        "folders": "*",
-        "hidden": true,
-        "lstype": "files",
-        "path": true,
-        "single": true,
-        "depth": 0,
-        "stat": false,
-        "showWarnings": true,
-        "x": 370,
-        "y": 2060,
-        "wires": [
-            [
-                "63307299fd92c10a"
-            ]
-        ]
-    },
-    {
-        "id": "b33a4157124910f9",
-        "type": "inject",
-        "z": "6cf7250c223824e5",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 160,
-        "y": 2060,
-        "wires": [
-            [
-                "f484b1c499aba1b4"
-            ]
-        ]
-    },
-    {
-        "id": "22290e29d5444109",
-        "type": "fs-file-lister",
-        "z": "6cf7250c223824e5",
-        "name": "Files ending by 3",
-        "start": "/data/flickr/",
-        "pattern": "photo_*3.json",
-        "folders": "*",
-        "hidden": true,
-        "lstype": "files",
-        "path": true,
-        "single": true,
-        "depth": 0,
-        "stat": false,
-        "showWarnings": true,
-        "x": 370,
-        "y": 2120,
-        "wires": [
-            [
-                "63307299fd92c10a"
-            ]
-        ]
-    },
-    {
-        "id": "bf81be04c7af69bd",
-        "type": "inject",
-        "z": "6cf7250c223824e5",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 160,
-        "y": 2120,
-        "wires": [
-            [
-                "22290e29d5444109"
-            ]
-        ]
-    },
-    {
-        "id": "9d28689b5f016b24",
-        "type": "fs-file-lister",
-        "z": "6cf7250c223824e5",
-        "name": "Files ending by 4",
-        "start": "/data/flickr/",
-        "pattern": "photo_*4.json",
-        "folders": "*",
-        "hidden": true,
-        "lstype": "files",
-        "path": true,
-        "single": true,
-        "depth": 0,
-        "stat": false,
-        "showWarnings": true,
-        "x": 370,
-        "y": 2180,
-        "wires": [
-            [
-                "63307299fd92c10a"
-            ]
-        ]
-    },
-    {
-        "id": "63cd1f6aecd41537",
-        "type": "inject",
-        "z": "6cf7250c223824e5",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 160,
-        "y": 2180,
-        "wires": [
-            [
-                "9d28689b5f016b24"
-            ]
-        ]
-    },
-    {
-        "id": "37b670e1052d4aa9",
-        "type": "fs-file-lister",
-        "z": "6cf7250c223824e5",
-        "name": "Files ending by 5",
-        "start": "/data/flickr/",
-        "pattern": "photo_*5.json",
-        "folders": "*",
-        "hidden": true,
-        "lstype": "files",
-        "path": true,
-        "single": true,
-        "depth": 0,
-        "stat": false,
-        "showWarnings": true,
-        "x": 370,
-        "y": 2240,
-        "wires": [
-            [
-                "63307299fd92c10a"
-            ]
-        ]
-    },
-    {
-        "id": "f8a4d0dd6891324f",
-        "type": "inject",
-        "z": "6cf7250c223824e5",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 160,
-        "y": 2240,
-        "wires": [
-            [
-                "37b670e1052d4aa9"
-            ]
-        ]
-    },
-    {
-        "id": "05af178dfc148b74",
-        "type": "fs-file-lister",
-        "z": "6cf7250c223824e5",
-        "name": "Files ending by 6",
-        "start": "/data/flickr/",
-        "pattern": "photo_*6.json",
-        "folders": "*",
-        "hidden": true,
-        "lstype": "files",
-        "path": true,
-        "single": true,
-        "depth": 0,
-        "stat": false,
-        "showWarnings": true,
-        "x": 370,
-        "y": 2300,
-        "wires": [
-            [
-                "63307299fd92c10a"
-            ]
-        ]
-    },
-    {
-        "id": "429d631d5f41af90",
-        "type": "inject",
-        "z": "6cf7250c223824e5",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 160,
-        "y": 2300,
-        "wires": [
-            [
-                "05af178dfc148b74"
-            ]
-        ]
-    },
-    {
-        "id": "39360942db40e010",
-        "type": "fs-file-lister",
-        "z": "6cf7250c223824e5",
-        "name": "Files ending by 7",
-        "start": "/data/flickr/",
-        "pattern": "photo_*7.json",
-        "folders": "*",
-        "hidden": true,
-        "lstype": "files",
-        "path": true,
-        "single": true,
-        "depth": 0,
-        "stat": false,
-        "showWarnings": true,
-        "x": 370,
-        "y": 2360,
-        "wires": [
-            [
-                "63307299fd92c10a"
-            ]
-        ]
-    },
-    {
-        "id": "67a12f68f21cda17",
-        "type": "inject",
-        "z": "6cf7250c223824e5",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 160,
-        "y": 2360,
-        "wires": [
-            [
-                "39360942db40e010"
-            ]
-        ]
-    },
-    {
-        "id": "7f5f69c8aaad1109",
-        "type": "fs-file-lister",
-        "z": "6cf7250c223824e5",
-        "name": "Files ending by 8",
-        "start": "/data/flickr/",
-        "pattern": "photo_*8.json",
-        "folders": "*",
-        "hidden": true,
-        "lstype": "files",
-        "path": true,
-        "single": true,
-        "depth": 0,
-        "stat": false,
-        "showWarnings": true,
-        "x": 370,
-        "y": 2420,
-        "wires": [
-            [
-                "63307299fd92c10a"
-            ]
-        ]
-    },
-    {
-        "id": "4c23933f30fb1626",
-        "type": "inject",
-        "z": "6cf7250c223824e5",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 160,
-        "y": 2420,
-        "wires": [
-            [
-                "7f5f69c8aaad1109"
-            ]
-        ]
-    },
-    {
-        "id": "5ef37dfa38b0a97e",
-        "type": "fs-file-lister",
-        "z": "6cf7250c223824e5",
-        "name": "Files ending by 9",
-        "start": "/data/flickr/",
-        "pattern": "photo_*9.json",
-        "folders": "*",
-        "hidden": true,
-        "lstype": "files",
-        "path": true,
-        "single": true,
-        "depth": 0,
-        "stat": false,
-        "showWarnings": true,
-        "x": 370,
-        "y": 2480,
-        "wires": [
-            [
-                "63307299fd92c10a"
-            ]
-        ]
-    },
-    {
-        "id": "c55e686a1168f70c",
-        "type": "inject",
-        "z": "6cf7250c223824e5",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 160,
-        "y": 2480,
-        "wires": [
-            [
-                "5ef37dfa38b0a97e"
-            ]
-        ]
-    },
-    {
-        "id": "07b0922e3d6d3433",
-        "type": "comment",
-        "z": "6cf7250c223824e5",
-        "name": "For testing with a limited number of posts",
-        "info": "",
-        "x": 240,
-        "y": 2560,
-        "wires": []
-    },
-    {
-        "id": "cc6f22e65f21746d",
-        "type": "inject",
-        "z": "6cf7250c223824e5",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 160,
-        "y": 3020,
-        "wires": [
-            [
-                "f1d8b662895e4f64"
-            ]
-        ]
-    },
-    {
-        "id": "3bfaa68f3402a5eb",
-        "type": "fs-file-lister",
-        "z": "6cf7250c223824e5",
-        "name": "All NTZ files",
-        "start": "/data/flickr/output/",
-        "pattern": "photo_NTZ_*.txt",
-        "folders": "*",
-        "hidden": true,
-        "lstype": "files",
-        "path": true,
-        "single": true,
-        "depth": 0,
-        "stat": false,
-        "showWarnings": true,
-        "x": 630,
-        "y": 3020,
-        "wires": [
-            [
-                "7fb9953c2ef0316a"
             ]
         ]
     },
@@ -1528,29 +621,10 @@
         "stream": false,
         "addname": "",
         "x": 790,
-        "y": 2960,
+        "y": 3700,
         "wires": [
             [
                 "e82e5dc0bc2bc479"
-            ]
-        ]
-    },
-    {
-        "id": "7fb9953c2ef0316a",
-        "type": "split",
-        "z": "6cf7250c223824e5",
-        "name": "",
-        "splt": "\\n",
-        "spltType": "str",
-        "arraySplt": 1,
-        "arraySpltType": "len",
-        "stream": false,
-        "addname": "",
-        "x": 790,
-        "y": 3020,
-        "wires": [
-            [
-                "8ae2f38312a6262f"
             ]
         ]
     },
@@ -1567,7 +641,7 @@
         "encoding": "utf8",
         "allProps": false,
         "x": 942.857177734375,
-        "y": 2960,
+        "y": 3700,
         "wires": [
             [
                 "bd4c42b1caeb7e86"
@@ -1575,102 +649,20 @@
         ]
     },
     {
-        "id": "8ae2f38312a6262f",
-        "type": "file in",
-        "z": "6cf7250c223824e5",
-        "name": "",
-        "filename": "payload",
-        "filenameType": "msg",
-        "format": "utf8",
-        "chunk": false,
-        "sendError": false,
-        "encoding": "utf8",
-        "allProps": false,
-        "x": 940,
-        "y": 3020,
-        "wires": [
-            [
-                "b13971153d4b91b4"
-            ]
-        ]
-    },
-    {
         "id": "4a55016d04d79c7d",
         "type": "fs-ops-delete",
         "z": "6cf7250c223824e5",
-        "name": "delete flickr_TZ.txt",
+        "name": "delete flickr.sh",
         "path": "/data/flickr/merge/",
         "pathType": "str",
-        "filename": "flickr_TZ.txt",
+        "filename": "flickr.sh",
         "filenameType": "str",
-        "x": 370,
-        "y": 2960,
+        "x": 360,
+        "y": 3700,
         "wires": [
             [
                 "7da182a2ba159102"
             ]
-        ]
-    },
-    {
-        "id": "f1d8b662895e4f64",
-        "type": "fs-ops-delete",
-        "z": "6cf7250c223824e5",
-        "name": "delete flickr_NTZ.txt",
-        "path": "/data/flickr/merge/",
-        "pathType": "str",
-        "filename": "flickr_NTZ.txt",
-        "filenameType": "str",
-        "x": 380,
-        "y": 3020,
-        "wires": [
-            [
-                "3bfaa68f3402a5eb"
-            ]
-        ]
-    },
-    {
-        "id": "b13971153d4b91b4",
-        "type": "join",
-        "z": "6cf7250c223824e5",
-        "name": "",
-        "mode": "custom",
-        "build": "string",
-        "property": "msg.payload",
-        "propertyType": "msg",
-        "key": "topic",
-        "joiner": "",
-        "joinerType": "str",
-        "accumulate": false,
-        "timeout": "",
-        "count": "",
-        "reduceRight": false,
-        "reduceExp": "",
-        "reduceInit": "",
-        "reduceInitType": "",
-        "reduceFixup": "",
-        "x": 1110,
-        "y": 3020,
-        "wires": [
-            [
-                "7d17d2f5b954f9e8"
-            ]
-        ]
-    },
-    {
-        "id": "7d17d2f5b954f9e8",
-        "type": "file",
-        "z": "6cf7250c223824e5",
-        "name": "flickr_NTZ.txt",
-        "filename": "/data/flickr/merge/flickr_NTZ.txt",
-        "filenameType": "str",
-        "appendNewline": true,
-        "createDir": true,
-        "overwriteFile": "true",
-        "encoding": "none",
-        "x": 1290,
-        "y": 3020,
-        "wires": [
-            []
         ]
     },
     {
@@ -1694,7 +686,7 @@
         "reduceInitType": "",
         "reduceFixup": "",
         "x": 1110,
-        "y": 2960,
+        "y": 3700,
         "wires": [
             [
                 "002e4486a1648a2a"
@@ -1705,35 +697,471 @@
         "id": "002e4486a1648a2a",
         "type": "file",
         "z": "6cf7250c223824e5",
-        "name": "flickr_TZ.txt",
-        "filename": "/data/flickr/merge/flickr_TZ.txt",
+        "name": "flickr.sh",
+        "filename": "/data/flickr/merge/flickr.sh",
         "filenameType": "str",
-        "appendNewline": true,
+        "appendNewline": false,
         "createDir": true,
         "overwriteFile": "true",
         "encoding": "none",
-        "x": 1290,
-        "y": 2960,
+        "x": 1280,
+        "y": 3700,
         "wires": [
-            []
+            [
+                "bbed247ae6137de4"
+            ]
         ]
     },
     {
         "id": "5801119f510f115b",
         "type": "comment",
         "z": "6cf7250c223824e5",
-        "name": "Merge posts",
+        "name": "Merge sh files",
         "info": "",
         "x": 150,
-        "y": 2900,
+        "y": 3640,
         "wires": []
+    },
+    {
+        "id": "9c923fce4156763d",
+        "type": "change",
+        "z": "6cf7250c223824e5",
+        "name": "outSh",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.outSh",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 2090,
+        "y": 3480,
+        "wires": [
+            [
+                "d10df7762d918a0a",
+                "e8a7dea96079c09f"
+            ]
+        ]
+    },
+    {
+        "id": "d10df7762d918a0a",
+        "type": "file",
+        "z": "6cf7250c223824e5",
+        "name": "file.sh",
+        "filename": "file.sh",
+        "filenameType": "msg",
+        "appendNewline": true,
+        "createDir": true,
+        "overwriteFile": "true",
+        "encoding": "none",
+        "x": 2250,
+        "y": 3480,
+        "wires": [
+            [
+                "514954164462fb08"
+            ]
+        ]
+    },
+    {
+        "id": "b66bd3841b3ac757",
+        "type": "debug",
+        "z": "6cf7250c223824e5",
+        "name": "debug write sh",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2600,
+        "y": 3480,
+        "wires": []
+    },
+    {
+        "id": "514954164462fb08",
+        "type": "change",
+        "z": "6cf7250c223824e5",
+        "name": "Write file.sh",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "file.sh",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 2410,
+        "y": 3480,
+        "wires": [
+            [
+                "b66bd3841b3ac757"
+            ]
+        ]
+    },
+    {
+        "id": "5a470e6eafb3221b",
+        "type": "change",
+        "z": "6cf7250c223824e5",
+        "name": "outMd",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.outMd",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 2090,
+        "y": 3554,
+        "wires": [
+            [
+                "a7f1dda797277843",
+                "6c9d4ce9b12408bb"
+            ]
+        ]
+    },
+    {
+        "id": "a7f1dda797277843",
+        "type": "file",
+        "z": "6cf7250c223824e5",
+        "name": "file.md",
+        "filename": "file.md",
+        "filenameType": "msg",
+        "appendNewline": true,
+        "createDir": true,
+        "overwriteFile": "true",
+        "encoding": "none",
+        "x": 2250,
+        "y": 3554,
+        "wires": [
+            [
+                "4680c949a3fd7a90"
+            ]
+        ]
+    },
+    {
+        "id": "40e3ef9cdd035d28",
+        "type": "debug",
+        "z": "6cf7250c223824e5",
+        "name": "debug write md",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2600,
+        "y": 3554,
+        "wires": []
+    },
+    {
+        "id": "4680c949a3fd7a90",
+        "type": "change",
+        "z": "6cf7250c223824e5",
+        "name": "Write file.md",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "file.md",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 2410,
+        "y": 3554,
+        "wires": [
+            [
+                "40e3ef9cdd035d28"
+            ]
+        ]
+    },
+    {
+        "id": "e8a7dea96079c09f",
+        "type": "debug",
+        "z": "6cf7250c223824e5",
+        "name": "debug sh",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2260,
+        "y": 3420,
+        "wires": []
+    },
+    {
+        "id": "6c9d4ce9b12408bb",
+        "type": "debug",
+        "z": "6cf7250c223824e5",
+        "name": "debug md",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2270,
+        "y": 3614,
+        "wires": []
+    },
+    {
+        "id": "1e3cb120e9bbd122",
+        "type": "function",
+        "z": "6cf7250c223824e5",
+        "name": "description",
+        "func": "if (msg.payload.description != '')\n{\n    var description = msg.payload.description;\n    var descArray = msg.payload.description.split(\"---\");\n    description = descArray[0] + '\\n';\n    if (descArray[2] != null)\n        description += descArray[2] + '\\n';\n\n    // personal clenup of my description\n    description = description.replace(/[\\r\\n]{3,}/gm, '');\n    description = description.replace(/[\\&\\;]/g, '');\n    description = description.replace(/<a href=\"https:\\/\\/www.facebook.com\\/Lucas.Janin.Photography\" rel=\"nofollow\">My Facebook<\\/a> \\/ <a href=\"https:\\/\\/plus.google.com\\/u\\/0\\/\\+LucasJanin\\/posts\" rel=\"nofollow\">My Google\\+<\\/a>/ig, '');\n    description = description.replace(/À regarder en mode plein écran avec la touche quotLquot \\(spécialement avec un écran Retina\\)/ig, '');\n    description = description.replace(/Press.*?Display\\)/g, '');\n    description = description.replace(/\\| <a href.*?--/g, '');\n    description = description.replace(/<a href.*?Black<\\/a>/g, '');\n    description = description.replace(/\\-\\-/g, '');\n    description = description.replace(/\\n +/g, '');\n    description = description.replace(/\\n{2,}$/gm, '\\n');\n    description = description.replace(/\\n$/g, '');\n\n    // adding description\n    msg.payload.description = description;\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 730,
+        "y": 3460,
+        "wires": [
+            [
+                "999c39cd51f8e68e"
+            ]
+        ]
+    },
+    {
+        "id": "e0a84435dd337bd4",
+        "type": "inject",
+        "z": "6cf7250c223824e5",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 160,
+        "y": 3940,
+        "wires": [
+            [
+                "f20eebb70a591f02",
+                "9ec680e0d5b0bc52"
+            ]
+        ]
+    },
+    {
+        "id": "7f75c176195230e2",
+        "type": "fs-ops-delete",
+        "z": "6cf7250c223824e5",
+        "name": "delete all sh",
+        "path": "",
+        "pathType": "str",
+        "filename": "payload",
+        "filenameType": "msg",
+        "x": 670,
+        "y": 3900,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f20eebb70a591f02",
+        "type": "fs-file-lister",
+        "z": "6cf7250c223824e5",
+        "name": "All sh files",
+        "start": "/data/flickr/output/sh/",
+        "pattern": "*.sh",
+        "folders": "*",
+        "hidden": true,
+        "lstype": "files",
+        "path": true,
+        "single": true,
+        "depth": 0,
+        "stat": false,
+        "showWarnings": true,
+        "x": 360,
+        "y": 3900,
+        "wires": [
+            [
+                "36c1727c962ecaba"
+            ]
+        ]
+    },
+    {
+        "id": "36c1727c962ecaba",
+        "type": "split",
+        "z": "6cf7250c223824e5",
+        "name": "",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "x": 510,
+        "y": 3900,
+        "wires": [
+            [
+                "7f75c176195230e2"
+            ]
+        ]
+    },
+    {
+        "id": "68e900690d6dbca8",
+        "type": "fs-ops-delete",
+        "z": "6cf7250c223824e5",
+        "name": "delete all md",
+        "path": "",
+        "pathType": "str",
+        "filename": "payload",
+        "filenameType": "msg",
+        "x": 670,
+        "y": 3980,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "9ec680e0d5b0bc52",
+        "type": "fs-file-lister",
+        "z": "6cf7250c223824e5",
+        "name": "All sh files",
+        "start": "/data/flickr/output/md/",
+        "pattern": "*.md",
+        "folders": "*",
+        "hidden": true,
+        "lstype": "files",
+        "path": true,
+        "single": true,
+        "depth": 0,
+        "stat": false,
+        "showWarnings": true,
+        "x": 360,
+        "y": 3980,
+        "wires": [
+            [
+                "f27c8b8085f753e2"
+            ]
+        ]
+    },
+    {
+        "id": "f27c8b8085f753e2",
+        "type": "split",
+        "z": "6cf7250c223824e5",
+        "name": "",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "x": 510,
+        "y": 3980,
+        "wires": [
+            [
+                "68e900690d6dbca8"
+            ]
+        ]
+    },
+    {
+        "id": "d01ce840691bcdfa",
+        "type": "comment",
+        "z": "6cf7250c223824e5",
+        "name": "Flickr: Cleanup md and sh output",
+        "info": "",
+        "x": 190,
+        "y": 3840,
+        "wires": []
+    },
+    {
+        "id": "bbed247ae6137de4",
+        "type": "exec",
+        "z": "6cf7250c223824e5",
+        "command": "chmod 777 /data/flickr/merge/flickr.sh",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "",
+        "x": 1550,
+        "y": 3700,
+        "wires": [
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "ef1290206951975f",
+        "type": "delay",
+        "z": "6cf7250c223824e5",
+        "name": "",
+        "pauseType": "rate",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "3",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 720,
+        "y": 2920,
+        "wires": [
+            [
+                "5f31ea54ef13a4ac"
+            ]
+        ]
     },
     {
         "id": "447f371ba2bc536e",
         "type": "junction",
         "z": "6cf7250c223824e5",
         "x": 900,
-        "y": 2380,
+        "y": 3560,
         "wires": [
             [
                 "0dc243c253d853b7"
@@ -1744,36 +1172,12 @@
         "id": "0dc243c253d853b7",
         "type": "junction",
         "z": "6cf7250c223824e5",
-        "x": 1760,
-        "y": 2380,
+        "x": 1740,
+        "y": 3560,
         "wires": [
             [
                 "03c7905ac0a94256",
                 "bccf63686c838a79"
-            ]
-        ]
-    },
-    {
-        "id": "2e015f9ee6edefaf",
-        "type": "junction",
-        "z": "6cf7250c223824e5",
-        "x": 520,
-        "y": 2680,
-        "wires": [
-            [
-                "63307299fd92c10a"
-            ]
-        ]
-    },
-    {
-        "id": "63307299fd92c10a",
-        "type": "junction",
-        "z": "6cf7250c223824e5",
-        "x": 540,
-        "y": 2220,
-        "wires": [
-            [
-                "f57808cf3c2ba3e2"
             ]
         ]
     }
