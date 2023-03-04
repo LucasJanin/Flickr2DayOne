@@ -58,6 +58,11 @@ When this part is done, you use de bottom section to merge the sh files.
 ```
 You can execute this script to create the entries on Day One.
 
+## Current limitations
+
+The time of the entry isn't matching the taken time information from Flickr due to timezone issue.
+I contacted DayOne's developer for clarification about the CLI command.
+
 ## The flow
 
 ![Flickr2DayOne Flow](Flickr2DayOne_flow.png)
